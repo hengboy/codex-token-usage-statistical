@@ -115,7 +115,7 @@ class CodexUsageReportTests(unittest.TestCase):
                 for item in entries:
                     handle.write(json.dumps(item) + "\n")
 
-            report = self.load_report(root, "--timezone", "Asia/Shanghai", "--group-by", "day")
+            report = self.load_report(root, "--timezone", "Asia/Shanghai", "--group-by", "day", "--days", "1", "--end", "2026-06-11")
             self.assertEqual(report["meta"]["start"], "2026-06-11")
             self.assertEqual(report["meta"]["end"], "2026-06-11")
             rows = report["breakdown"]["rows"]
@@ -145,6 +145,7 @@ class CodexUsageReportTests(unittest.TestCase):
             self.assertEqual(MODULE.resolve_range(MODULE.parse_args(["--start", "2026-06-05", "--end", "2026-06-10"]), tz, now), (MODULE.parse_date("2026-06-05", "--start"), MODULE.parse_date("2026-06-10", "--end")))
             self.assertEqual(MODULE.resolve_range(MODULE.parse_args(["--month", "2026-06"]), tz, now), (MODULE.parse_date("2026-06-01", "--month"), MODULE.parse_date("2026-06-18", "--month")))
             self.assertEqual(MODULE.resolve_range(MODULE.parse_args(["--month", "2026-05"]), tz, now), (MODULE.parse_date("2026-05-01", "--month"), MODULE.parse_date("2026-05-31", "--month")))
+            self.assertEqual(MODULE.resolve_range(MODULE.parse_args([]), tz, now), (MODULE.parse_date("2026-06-18", "--start"), MODULE.parse_date("2026-06-18", "--end")))
 
             report = self.load_report(root, "--start", "2026-06-05", "--end", "2026-06-10")
             self.assertEqual(report["meta"]["start"], "2026-06-05")
@@ -172,11 +173,11 @@ class CodexUsageReportTests(unittest.TestCase):
                 for item in entries:
                     handle.write(json.dumps(item) + "\n")
 
-            weekly = self.load_report(root, "--group-by", "week")
+            weekly = self.load_report(root, "--group-by", "week", "--start", "2026-06-01", "--end", "2026-07-03")
             self.assertEqual([row["label"] for row in weekly["breakdown"]["rows"]], ["2026-W23", "2026-W24", "2026-W27"])
             self.assertEqual(weekly["highlights"]["peak_week"]["label"], "2026-W27")
 
-            monthly = self.load_report(root, "--group-by", "month")
+            monthly = self.load_report(root, "--group-by", "month", "--start", "2026-06-01", "--end", "2026-07-03")
             self.assertEqual([row["label"] for row in monthly["breakdown"]["rows"]], ["2026-06", "2026-07"])
             self.assertEqual(monthly["highlights"]["peak_month"]["label"], "2026-06")
             self.assertEqual(monthly["highlights"]["peak_day"]["label"], "2026-07-03")
@@ -201,6 +202,27 @@ class CodexUsageReportTests(unittest.TestCase):
             self.assertIn("- 范围:", zh_output)
             self.assertIn("## 汇总", zh_output)
             self.assertIn("最高的一天", zh_output)
+
+    def test_markdown_uses_grouped_numbers(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            session_path = root / "sessions" / "2026" / "06" / "10" / "rollout-g.jsonl"
+            session_path.parent.mkdir(parents=True)
+            entries = [
+                {"timestamp": "2026-06-10T01:00:00Z", "type": "session_meta", "payload": {"id": "session-g"}},
+                token_event("2026-06-10T01:00:00Z", 12345, 6789, 2345, 678, 14690),
+            ]
+            with session_path.open("w", encoding="utf-8") as handle:
+                for item in entries:
+                    handle.write(json.dumps(item) + "\n")
+
+            zh_output = self.render_markdown(root, "--language", "zh")
+            self.assertIn("- 调用次数: 1", zh_output)
+            self.assertIn("| 总 Token | 14,690 |", zh_output)
+            self.assertIn("| 输入 Token | 12,345 |", zh_output)
+            self.assertIn("| 缓存输入 Token | 6,789 |", zh_output)
+            self.assertIn("| 输出 Token | 2,345 |", zh_output)
+            self.assertIn("- 最高的一天: 2026-06-10 (总 Token: 14,690, 调用次数: 1)", zh_output)
 
     def test_json_shape_is_stable(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

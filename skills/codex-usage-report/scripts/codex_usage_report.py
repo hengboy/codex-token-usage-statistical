@@ -179,6 +179,8 @@ def resolve_range(
         end_anchor = end_date or today
         start_date = end_anchor - timedelta(days=args.days - 1)
         end_date = end_anchor
+    if start_date is None and end_date is None:
+        return today, today
     if start_date and end_date and start_date > end_date:
         raise SystemExit("--start cannot be after --end")
     return start_date, end_date
@@ -416,8 +418,10 @@ def build_report(
 
 
 def format_number(value: object) -> str:
+    if isinstance(value, int):
+        return f"{value:,}"
     if isinstance(value, float):
-        return f"{value:.2f}"
+        return f"{value:,.2f}"
     return str(value)
 
 
@@ -443,9 +447,9 @@ def render_markdown(report: dict[str, object], language: str) -> str:
     lines = [
         f"- {strings['range']}: {format_range(meta, strings)}",
         f"- {strings['timezone']}: {meta['timezone']}",
-        f"- {strings['calls']}: {summary['calls']}",
-        f"- {strings['sessions']}: {summary['sessions']}",
-        f"- {strings['active_days']}: {summary['active_days']}",
+        f"- {strings['calls']}: {format_number(summary['calls'])}",
+        f"- {strings['sessions']}: {format_number(summary['sessions'])}",
+        f"- {strings['active_days']}: {format_number(summary['active_days'])}",
         "",
         f"## {strings['summary']}",
         "",
@@ -482,7 +486,7 @@ def render_markdown(report: dict[str, object], language: str) -> str:
         )
         for row in breakdown["rows"]:
             lines.append(
-                f"| {row['label']} | {row['start']} | {row['end']} | {row['calls']} | {row['sessions']} | {row['total']} | {row['input']} | {row['cached_input']} | {row['output']} | {row['net_usage']} |"
+                f"| {row['label']} | {row['start']} | {row['end']} | {format_number(row['calls'])} | {format_number(row['sessions'])} | {format_number(row['total'])} | {format_number(row['input'])} | {format_number(row['cached_input'])} | {format_number(row['output'])} | {format_number(row['net_usage'])} |"
             )
     return "\n".join(lines)
 
@@ -490,7 +494,7 @@ def render_markdown(report: dict[str, object], language: str) -> str:
 def render_highlight(row: dict[str, object] | None, strings: dict[str, str]) -> str:
     if not row:
         return strings["none"]
-    return f"{row['label']} ({strings['total']}: {row['total']}, {strings['calls']}: {row['calls']})"
+    return f"{row['label']} ({strings['total']}: {format_number(row['total'])}, {strings['calls']}: {format_number(row['calls'])})"
 
 
 def main(argv: list[str] | None = None) -> int:

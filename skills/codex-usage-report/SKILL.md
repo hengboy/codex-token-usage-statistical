@@ -5,7 +5,7 @@ description: Use when local Codex session logs need token usage reports by range
 
 # Codex Usage Report
 
-Generate token usage reports from local Codex session JSONL logs.
+Generate token usage reports from local Codex session JSONL logs. By default, query today's token usage in the machine's local timezone.
 
 ## Command
 
@@ -17,11 +17,14 @@ python3 -B skills/codex-usage-report/scripts/codex_usage_report.py --days 7 --gr
 python3 -B skills/codex-usage-report/scripts/codex_usage_report.py --month 2026-06 --format json
 ```
 
+Running without any range flags defaults to today's natural day in the detected local timezone.
+
 ## Output Rules
 
 - Default to `--format markdown` when replying directly to a user.
 - Use `--format json` when the result will be parsed, stored, or post-processed.
 - Use `--language en` or `--language zh` for the final audience.
+- Markdown numbers should use `,` as the thousands separator for readability.
 
 ## Options
 
@@ -40,6 +43,7 @@ python3 -B skills/codex-usage-report/scripts/codex_usage_report.py --month 2026-
 ## Range Rules
 
 - `--month` cannot be combined with `--days`, `--start`, or `--end`.
+- With no range flags, the report covers the local current day only.
 - `--start/--end` are inclusive dates.
 - `--days` means rolling natural days ending on `--end` or the local current day.
 - Current-month reports are truncated to the local current day.
@@ -49,4 +53,3 @@ python3 -B skills/codex-usage-report/scripts/codex_usage_report.py --month 2026-
 - The script only aggregates `info.last_token_usage`.
 - It ignores invalid JSON, unrelated events, and `token_count` records with `info: null`.
 - It scans `~/.codex/sessions` and `~/.codex/archived_sessions` by default.
-
