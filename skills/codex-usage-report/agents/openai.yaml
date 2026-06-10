@@ -1,0 +1,5 @@
+interface:
+  display_name: "Codex Usage Report"
+  short_description: "Build local token usage reports from Codex session logs."
+  default_prompt: "Generate a Codex token usage report from local session logs and return it in Markdown unless automation needs JSON."
+
