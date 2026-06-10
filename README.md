@@ -7,8 +7,12 @@ It scans `~/.codex/sessions` and `~/.codex/archived_sessions`, deduplicates repe
 ## Install
 
 ```bash
-npx skills add https://github.com/hengboy/codex-token-usage-statistical.git
+git clone git@github.com:hengboy/codex-token-usage-statistical.git /tmp/codex-token-usage-statistical
+mkdir -p ~/.codex/skills
+cp -R /tmp/codex-token-usage-statistical/skills/codex-usage-report ~/.codex/skills/
 ```
+
+Codex loads local skills from `~/.codex/skills`.
 
 ## Skill Layout
 
@@ -46,4 +50,3 @@ JSON output always contains:
 ```bash
 python3 -B skills/codex-usage-report/scripts/test_codex_usage_report.py
 ```
-

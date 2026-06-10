@@ -7,8 +7,12 @@
 ## 安装
 
 ```bash
-npx skills add https://github.com/hengboy/codex-token-usage-statistical.git
+git clone git@github.com:hengboy/codex-token-usage-statistical.git /tmp/codex-token-usage-statistical
+mkdir -p ~/.codex/skills
+cp -R /tmp/codex-token-usage-statistical/skills/codex-usage-report ~/.codex/skills/
 ```
+
+Codex 会从 `~/.codex/skills` 加载本地 skills。
 
 ## Skill 结构
 
@@ -46,4 +50,3 @@ JSON 输出固定包含：
 ```bash
 python3 -B skills/codex-usage-report/scripts/test_codex_usage_report.py
 ```
-
